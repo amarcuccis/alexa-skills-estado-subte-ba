@@ -17,6 +17,7 @@ const i18n = require('i18next');
 const languageStrings = require('./languageStrings');
 // We will use the moment.js package in order to make sure that we calculate the date correctly
 //const moment = require('moment-timezone');
+const https = require('https');
 
 /////////////////////////////////
 // Handlers Definition
@@ -138,18 +139,11 @@ const SingleStatusIntentHandler = {
         const line = Alexa.getSlotValue(requestEnvelope, 'line');
         let lineStatus = 'normal, haciendo su recorrido desde sus cabeceras'; //This should be the status got from Subte API
 
-        //const lineAttributes = {
-        //    "line": line,
-
-        //};
-        //attributesManager.setPersistentAttributes(lineAttributes);
-        //await attributesManager.savePersistentAttributes();
+        doAPICallout();
 
         const speakOutput = handlerInput.t('SINGLE_LINE_STATUS_RESPONSE_MSG', { line: line, lineStatus: lineStatus });
         const repromptOutput = handlerInput.t('SINGLE_LINE_REPROMPT_MSG');
         
-        //comment aded in vscode
-
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .reprompt(repromptOutput)
@@ -157,6 +151,58 @@ const SingleStatusIntentHandler = {
             .getResponse();
     }
 };
+
+/**
+ * Subte Lines Map that has the slots values as keys and returns the propper value to be passed to the API request
+ 
+const lineAlertNamebyWord = new Map([
+    ['A' : 'Alert_LineaA'],
+    ['B' : 'Alert_LineaB'],
+    ['C' : 'Alert_LineaC'],
+    ['D' : 'Alert_LineaD'],
+    ['E' : 'Alert_LineaE'],
+    ['H' : 'Alert_LineaH']
+]);
+
+function getSubteStatus(inputLine) {
+    let lineAlertId = lineAlertNamebyWord.get(inputLine);
+    let statusResponse = JSON.parse(doAPICallout());
+    let allLines = statusResponse.entity;
+    let messageStatus='';
+
+    for (var i = 0; i < allLines.length; i++) {
+        let line = allLines[i];
+        if(lineAlertId == line.id) {
+            messageStatus = line.alert.description_text.translation.text;
+            break;
+        }
+    }
+    return messageStatus;
+};*/
+
+function doAPICallout() {
+    let clientId = '31f7bcdaff324d6a82b181afe81f6c15';
+    let clientSecret = '99A456EB8E544255A7EFB465764d3bB7';
+
+    https.get('https://apitransporte.buenosaires.gob.ar/subtes/serviceAlerts?client_id='+clientId+'&client_secret='+clientSecret+'&json=1', (resp) => {
+    let data = '';
+
+    // A chunk of data has been recieved.
+    resp.on('data', (chunk) => {
+        data += chunk;
+    });
+
+    // The whole response has been received. Print out the result.
+    resp.on('end', () => {
+        console.log(JSON.parse(data));
+    });
+
+    }).on("error", (err) => {
+        console.log("Error: " + err.message);
+    });
+
+}
+
 
 /**
  * Handles AMAZON.HelpIntent requests sent by Alexa 
