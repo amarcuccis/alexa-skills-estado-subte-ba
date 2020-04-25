@@ -1,0 +1,30 @@
+{
+  "askcliStatesVersion": "2020-03-31",
+  "profiles": {
+    "default": {
+      "skillId": "amzn1.ask.skill.aa64a807-4201-45cc-9a66-17833546c8c7",
+      "skillInfrastructure": {
+        "@ask-cli/cfn-deployer": {
+          "deployState": {
+            "default": {
+              "s3": {
+                "bucket": "ask-subteba-askclidef-useast1-1587838275247",
+                "key": "endpoint/build.zip",
+                "objectVersion": "ajCZBDaiLGXqv.xWaRZbtefo4zbTIdSD"
+              },
+              "stackId": "arn:aws:cloudformation:us-east-1:642988044808:stack/ask-EstadodelSubteBA-default-skillStack-1587838275247/786f6150-8720-11ea-be72-0e43f2110cc5"
+            }
+          }
+        }
+      },
+      "skillMetadata": {
+        "lastDeployHash": "G8N1XX71KcwbqIDhOYE3ZgN+eDw="
+      },
+      "code": {
+        "default": {
+          "lastDeployHash": "X0eQqMkeIPYBFAItffYB8RMRXBM="
+        }
+      }
+    }
+  }
+}
