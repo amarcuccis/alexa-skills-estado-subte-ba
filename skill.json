@@ -1,0 +1,24 @@
+{
+  "manifest": {
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "uri": "arn:aws:lambda:us-east-1:642988044808:function:ask-EstadodelSubteBA-default-sk-AlexaSkillFunction-123REGJHBJJFI"
+        },
+        "interfaces": []
+      }
+    },
+    "manifestVersion": "1.0",
+    "publishingInformation": {
+      "category": "KNOWLEDGE_AND_TRIVIA",
+      "distributionCountries": [],
+      "isAvailableWorldwide": true,
+      "locales": {
+        "es-MX": {
+          "name": "Estado del Subte BA"
+        }
+      },
+      "testingInstructions": "Sample Testing Instructions."
+    }
+  }
+}
