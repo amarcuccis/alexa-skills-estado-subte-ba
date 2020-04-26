@@ -29,6 +29,9 @@ let apiResponse;
 // If the HTTPS response is not successful or there is another problem, is marked true  
 let requestIsError = false;
 
+// True if none alert was found for the specific Subte Line
+let lineAlertFound = false;
+
 /////////////////////////////////
 // Handlers Definition
 /////////////////////////////////
@@ -59,13 +62,20 @@ const SingleStatusIntentHandler = {
         return Alexa.getIntentName(handlerInput.requestEnvelope) === 'SingleLineStatusIntent';
     },
     async handle(handlerInput) {
-        const { requestEnvelope } = handlerInput;
-        const line = handlerInput.requestEnvelope.request.intent.slots.line.value;
+
+        const slots = handlerInput.requestEnvelope.request.intent.slots;
+        console.log('==== slots: '+slots);
+        
+        let line = slots['line'].value;
+        console.log('==== line: '+line);
+        
         let lineStatus = getSubteStatus(line, handlerInput);
         
         let speakOutput = '';
         if(requestIsError) {
-            speakOutput = lineStatus;
+            speakOutput = lineStatus; // If error, lineStatus comes as a complete Error message
+        } else if(!lineAlertFound) {
+            speakOutput = handlerInput.t('SINGLE_LINE_NORMAL_STATUS_RESPONSE_MSG', { line: line });
         } else {
             speakOutput = handlerInput.t('SINGLE_LINE_STATUS_RESPONSE_MSG', { line: line, lineStatus: lineStatus });
         }
@@ -211,12 +221,11 @@ function getSubteStatus(inputLine, handlerInput) {
     let messageStatus='';
     console.log('= inputLine: '+inputLine);
     
-    // TEST PURPOSE ONLY
     //doAPICallout();
-    //apiResponse = '{"header":{"gtfs_realtime_version":"2.0","incrementality":0,"timestamp":1587841510},"entity":[{"id":"Alert_LineaA","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaA","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaB","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaB","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaC","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaC","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaD","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaD","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaE","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaE","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaH","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaH","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}}]}';
-    requestIsError = true;
+    apiResponse = '{"header":{"gtfs_realtime_version":"2.0","incrementality":0,"timestamp":1587841510},"entity":[{"id":"Alert_LineaA","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaA","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaB","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaB","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"circula con servicio limitado en las estaciones Medrano y Alem.","language":"es"}]},"description_text":{"translation":[{"text":"circula con servicio limitado en las estaciones Medrano y Alem.","language":"es"}]}}},{"id":"Alert_LineaC","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaC","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaE","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaE","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaH","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaH","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}}]}';
+    //requestIsError = true;
     
-    if(inputLine != undefined && !requestIsError) {
+    if(inputLine != undefined && !requestIsError && apiResponse != undefined) {
         console.log('== apiResponse: '+JSON.parse(apiResponse));
         
         let lineAlertId = 'Alert_Linea'+inputLine.toUpperCase();
@@ -225,26 +234,23 @@ function getSubteStatus(inputLine, handlerInput) {
         
         console.log('== lineAlertId: '+lineAlertId);
         console.log('== allLines: '+allLines);
-    
+
         for (var i = 0; i < allLines.length; i++) {
           let line = allLines[i].id;
           console.log('== line: '+allLines[i].id);
               console.log('linea api desc: '+allLines[i].alert.description_text.translation[0].text);
           if(lineAlertId === line) {
             messageStatus = allLines[i].alert.description_text.translation[0].text;
+            lineAlertFound = true;
             break;
           }
         }
-        
+
         console.log('lineAlertId: '+lineAlertId);
         console.log('mensaje: '+messageStatus);
     } else {
-        if(requestIsError) {
-            messageStatus = handlerInput.t('REQUEST_ERROR_MSG');
-        } else {
-            messageStatus = handlerInput.t('ERROR_MSG');
-            requestIsError = true;
-        }
+        messageStatus = handlerInput.t('REQUEST_ERROR_MSG');
+        requestIsError = true;
     }
     return messageStatus;
 }
