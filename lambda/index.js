@@ -1,6 +1,8 @@
-// This sample demonstrates handling intents from an Alexa skill using the Alexa Skills Kit SDK (v2).
-// Please visit https://alexa.design/cookbook for additional examples on implementing slots, dialog management,
-// session persistence, api calls, and more.
+/**
+ * @author Alex Marcucci
+ * @date 04/2020
+ * @version 0.1
+ */
 
 /////////////////////////////////
 // Modules Definition
@@ -8,107 +10,31 @@
 
 // ASK SDK
 const Alexa = require('ask-sdk-core');
+
 // ASK SDK adapter to connecto to Amazon S3
 const persistenceAdapter = require('ask-sdk-s3-persistence-adapter');
+
 // i18n library dependency, we use it below in a localisation interceptor
 const i18n = require('i18next');
-// We import a language strings object containing all of our strings.
-// The keys for each string will then be referenced in our code, e.g. handlerInput.t('WELCOME_MSG')
+
+// Used to get the translations strings
 const languageStrings = require('./languageStrings');
-// We will use the moment.js package in order to make sure that we calculate the date correctly
-//const moment = require('moment-timezone');
+
+// Useful to make the HTTPS request to API Transporte
 const https = require('https');
+
+// Filled with the successful response of the API Transporte
+let apiResponse;
+
+// If the HTTPS response is not successful or there is another problem, is marked true  
+let requestIsError = false;
 
 /////////////////////////////////
 // Handlers Definition
 /////////////////////////////////
 
 /**
- * Handles LaunchRequest requests sent by Alexa when a birthdate has been registered
- * Note : this type of request is send when the user invokes your skill without providing a specific intent.
-const HasBirthdayLaunchRequestHandler = {
-    canHandle(handlerInput) {
-        const { attributesManager } = handlerInput;
-        const sessionAttributes = attributesManager.getSessionAttributes() || {};
-
-        const year = sessionAttributes.hasOwnProperty('year') ? sessionAttributes.year : 0;
-        const month = sessionAttributes.hasOwnProperty('month') ? sessionAttributes.month : 0;
-        const day = sessionAttributes.hasOwnProperty('day') ? sessionAttributes.day : 0;
-
-        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest'
-            && year
-            && month
-            && day;
-    },
-    async handle(handlerInput) {
-        const { serviceClientFactory, requestEnvelope, attributesManager } = handlerInput;
-        const deviceId = Alexa.getDeviceId(requestEnvelope)
-        const sessionAttributes = attributesManager.getSessionAttributes() || {};
-
-        const year = sessionAttributes.hasOwnProperty('year') ? sessionAttributes.year : 0;
-        const month = sessionAttributes.hasOwnProperty('month') ? sessionAttributes.month : 0;
-        const day = sessionAttributes.hasOwnProperty('day') ? sessionAttributes.day : 0;
-
-        let userTimeZone;
-        try {
-            const upsServiceClient = serviceClientFactory.getUpsServiceClient();
-            userTimeZone = await upsServiceClient.getSystemTimeZone(deviceId);
-        } catch (error) {
-            if (error.name !== 'ServiceError') {
-                const errorSpeechText = handlerInput.t('ERROR_TIMEZONE_MSG');
-                return handlerInput.responseBuilder.speak(errorSpeechText).getResponse();
-            }
-            console.log('error', error.message);
-        }
-        console.log('userTimeZone', userTimeZone);
-
-        // getting the current date with the time set to the start of the day, aka 00:00AM
-        const currentDate = moment().tz(userTimeZone).startOf('day')
-        // getting the current year
-        const currentYear = currentDate.year();
-        
-        console.log('currentDate:', currentDate.toString());
-        
-        // getting the next birthday
-        const dateStr = currentYear.toString() + ' ' + month + ' ' + day.toString();
-        const locale = Alexa.getLocale(requestEnvelope);
-        let nextBirthday = moment(dateStr, 'YYYY MMM DD', locale);
-        console.log('nextBirthday:', nextBirthday.toString())
-
-        // calculate the difference between the current date and the next birthday
-        let diffDays = nextBirthday.diff(currentDate, 'days');
-
-        // setting the default speakOutput to Happy xth Birthday!! 
-        // Alexa will automatically correct the ordinal for you.
-        // no need to worry about when to use st, th, rd
-        let age = currentYear - year;
-        let speakOutput = handlerInput.t('HAPPY_BIRTHDAY_MSG', { age: age });
-
-        // checking if birthday is still to happen or...
-        if (diffDays > 0) {
-            speakOutput = handlerInput.t('WELCOME_BACK_MSG', { count: diffDays, age: age });
-        } 
-        // has already happened this year
-        else if (diffDays < 0) {
-            // in this case, add one year to the next birthday,
-            nextBirthday = nextBirthday.add(1, 'Y');
-            // recalculate the difference,
-            diffDays = nextBirthday.diff(currentDate, 'days')
-            // and add on extra year to the age
-            age++
-            speakOutput = handlerInput.t('WELCOME_BACK_MSG', { count: diffDays, age: age });
-        }
-
-        return handlerInput.responseBuilder
-            .speak(speakOutput)
-            .getResponse();
-    }
-};
-*/
-
-/**
- * Handles LaunchRequest requests sent by Alexa when no birthdate has been registered
- * Note : this type of request is send when the user invokes your skill without providing a specific intent.
+ * Handles LaunchRequest requests sent by Alexa when intent is invoked
  */
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
@@ -116,7 +42,7 @@ const LaunchRequestHandler = {
     },
     handle(handlerInput) {
         const speakOutput = handlerInput.t('WELCOME_MSG');
-        const repromptOutput = handlerInput.t('WELCOME_REPROMPT_MSG');
+        const repromptOutput = handlerInput.t('WELCOME_LISTEN_MSG');
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
@@ -126,87 +52,37 @@ const LaunchRequestHandler = {
 };
 
 /**
- * Handles CaptureBirthdayIntent requests sent by Alexa (when a user specify a birthdate)
- * Note : this request is sent when the user makes a request that corresponds to CaptureBirthdayIntent intent defined in your intent schema.
+ * Handles SingleStatusIntentHandler requests sent by Alexa (when a user specify a Subte Line)
  */
 const SingleStatusIntentHandler = {
     canHandle(handlerInput) {
         return Alexa.getIntentName(handlerInput.requestEnvelope) === 'SingleLineStatusIntent';
     },
     async handle(handlerInput) {
-        const { attributesManager, requestEnvelope } = handlerInput;
-
-        const line = Alexa.getSlotValue(requestEnvelope, 'line');
-        let lineStatus = 'normal, haciendo su recorrido desde sus cabeceras'; //This should be the status got from Subte API
-
-        doAPICallout();
-
-        const speakOutput = handlerInput.t('SINGLE_LINE_STATUS_RESPONSE_MSG', { line: line, lineStatus: lineStatus });
-        const repromptOutput = handlerInput.t('SINGLE_LINE_REPROMPT_MSG');
+        const { requestEnvelope } = handlerInput;
+        const line = handlerInput.requestEnvelope.request.intent.slots.line.value;
+        
+        let lineStatus = getSubteStatus(line, handlerInput);
+        
+        let speakOutput = '';
+        if(requestIsError) {
+            speakOutput = lineStatus;
+        } else {
+            speakOutput = handlerInput.t('SINGLE_LINE_STATUS_RESPONSE_MSG', { line: line, lineStatus: lineStatus });
+        }
+        
+        const listenOutput = handlerInput.t('SINGLE_LINE_LISTEN_MSG');
         
         return handlerInput.responseBuilder
             .speak(speakOutput)
-            .reprompt(repromptOutput)
-            .withShouldEndSession(false) // force the skill to close the session after confirming the birthday date
+            .reprompt(listenOutput)
+            .withShouldEndSession(requestIsError) // force the skill to close the session after confirming the birthday date
             .getResponse();
     }
 };
 
 /**
- * Subte Lines Map that has the slots values as keys and returns the propper value to be passed to the API request
- 
-const lineAlertNamebyWord = new Map([
-    ['A' : 'Alert_LineaA'],
-    ['B' : 'Alert_LineaB'],
-    ['C' : 'Alert_LineaC'],
-    ['D' : 'Alert_LineaD'],
-    ['E' : 'Alert_LineaE'],
-    ['H' : 'Alert_LineaH']
-]);
-
-function getSubteStatus(inputLine) {
-    let lineAlertId = lineAlertNamebyWord.get(inputLine);
-    let statusResponse = JSON.parse(doAPICallout());
-    let allLines = statusResponse.entity;
-    let messageStatus='';
-
-    for (var i = 0; i < allLines.length; i++) {
-        let line = allLines[i];
-        if(lineAlertId == line.id) {
-            messageStatus = line.alert.description_text.translation.text;
-            break;
-        }
-    }
-    return messageStatus;
-};*/
-
-function doAPICallout() {
-    let clientId = '31f7bcdaff324d6a82b181afe81f6c15';
-    let clientSecret = '99A456EB8E544255A7EFB465764d3bB7';
-
-    https.get('https://apitransporte.buenosaires.gob.ar/subtes/serviceAlerts?client_id='+clientId+'&client_secret='+clientSecret+'&json=1', (resp) => {
-    let data = '';
-
-    // A chunk of data has been recieved.
-    resp.on('data', (chunk) => {
-        data += chunk;
-    });
-
-    // The whole response has been received. Print out the result.
-    resp.on('end', () => {
-        console.log(JSON.parse(data));
-    });
-
-    }).on("error", (err) => {
-        console.log("Error: " + err.message);
-    });
-
-}
-
-
-/**
  * Handles AMAZON.HelpIntent requests sent by Alexa 
- * Note : this request is sent when the user makes a request that corresponds to AMAZON.HelpIntent intent defined in your intent schema.
  */
 const HelpIntentHandler = {
     canHandle(handlerInput) {
@@ -225,7 +101,6 @@ const HelpIntentHandler = {
 
 /**
  * Handles AMAZON.CancelIntent & AMAZON.StopIntent requests sent by Alexa 
- * Note : this request is sent when the user makes a request that corresponds to AMAZON.CancelIntent & AMAZON.StopIntent intents defined in your intent schema.
  */
 const CancelAndStopIntentHandler = {
     canHandle(handlerInput) {
@@ -298,6 +173,84 @@ const ErrorHandler = {
 };
 
 /////////////////////////////////
+// Subte Line Request Definition Helper Functions
+/////////////////////////////////
+
+/**
+ * Makes the HTTPS request to put the Subte status in the global apiResponse variable
+ */
+function doAPICallout() {
+    let clientId = '31f7bcdaff324d6a82b181afe81f6c15';
+    let clientSecret = '99A456EB8E544255A7EFB465764d3bB7';
+
+    https.get('https://apitransporte.buenosaires.gob.ar/subtes/serviceAlerts?client_id='+clientId+'&client_secret='+clientSecret+'&json=1', (resp) => {
+    let data = '';
+
+    // A chunk of data has been recieved.
+    resp.on('data', (chunk) => {
+        data += chunk;
+    });
+
+    // The whole response has been received. Print out the result.
+    resp.on('end', () => {
+        //console.log(JSON.parse(data));
+        apiResponse = data;
+    });
+
+    }).on("error", (err) => {
+        console.log("Error: " + err.message);
+        requestIsError = true;
+    });
+
+}
+/**
+ * Returns the specific status description message from the incoming Subte Line
+ * @param {*} inputLine The Identifier of the Subte Line
+ * @param {*} handlerInput Handler to get access to the translations strings
+ */
+function getSubteStatus(inputLine, handlerInput) {
+    let messageStatus='';
+    console.log('= inputLine: '+inputLine);
+    
+    // TEST PURPOSE ONLY
+    //doAPICallout();
+    //apiResponse = '{"header":{"gtfs_realtime_version":"2.0","incrementality":0,"timestamp":1587841510},"entity":[{"id":"Alert_LineaA","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaA","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaB","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaB","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaC","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaC","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaD","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaD","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaE","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaE","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaH","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaH","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}}]}';
+    requestIsError = true;
+    
+    if(inputLine != undefined && !requestIsError) {
+        console.log('== apiResponse: '+JSON.parse(apiResponse));
+        
+        let lineAlertId = 'Alert_Linea'+inputLine.toUpperCase();
+        let parsedResponse = JSON.parse(apiResponse);
+        let allLines = parsedResponse.entity;
+        
+        console.log('== lineAlertId: '+lineAlertId);
+        console.log('== allLines: '+allLines);
+    
+        for (var i = 0; i < allLines.length; i++) {
+          let line = allLines[i].id;
+          console.log('== line: '+allLines[i].id);
+              console.log('linea api desc: '+allLines[i].alert.description_text.translation[0].text);
+          if(lineAlertId === line) {
+            messageStatus = allLines[i].alert.description_text.translation[0].text;
+            break;
+          }
+        }
+        
+        console.log('lineAlertId: '+lineAlertId);
+        console.log('mensaje: '+messageStatus);
+    } else {
+        if(requestIsError) {
+            messageStatus = handlerInput.t('REQUEST_ERROR_MSG');
+        } else {
+            messageStatus = handlerInput.t('ERROR_MSG');
+            requestIsError = true;
+        }
+    }
+    return messageStatus;
+}
+
+/////////////////////////////////
 // Interceptors Definition
 /////////////////////////////////
 
@@ -335,29 +288,6 @@ const LocalisationRequestInterceptor = {
     }
 };
 
-/* *
- * This request interceptor will load the persistent attributes as sessions attributes whatever handler is called.
- * 
- * Note: Below we use async and await ( more info: javascript.info/async-await )
- * It's a way to wrap promises and wait for the result of an external async operation
- * Like getting and saving the persistent attributes
- * 
-const LoadBirthdayInterceptor = {
-    async process(handlerInput) {
-        const { attributesManager } = handlerInput;
-        const sessionAttributes = await attributesManager.getPersistentAttributes() || {};
-
-        const year = sessionAttributes.hasOwnProperty('year') ? sessionAttributes.year : 0;
-        const month = sessionAttributes.hasOwnProperty('month') ? sessionAttributes.month : 0;
-        const day = sessionAttributes.hasOwnProperty('day') ? sessionAttributes.day : 0;
-
-        if (year && month && day) {
-            attributesManager.setSessionAttributes(sessionAttributes);
-        }
-    }
-}
-*/
-
 /////////////////////////////////
 // SkillBuilder Definition
 /////////////////////////////////
@@ -368,16 +298,13 @@ const LoadBirthdayInterceptor = {
  * defined are included below. The order matters - they're processed top to bottom.
  */
 exports.handler = Alexa.SkillBuilders.custom()
-//    .withPersistenceAdapter(
-//        new persistenceAdapter.S3PersistenceAdapter({ bucketName: process.env.S3_PERSISTENCE_BUCKET })
-//    )
     .addRequestHandlers(
         LaunchRequestHandler,
         SingleStatusIntentHandler,
         HelpIntentHandler,
         CancelAndStopIntentHandler,
         SessionEndedRequestHandler,
-        IntentReflectorHandler) // make sure IntentReflectorHandler is last so it doesn't override your custom intent handlers
+        IntentReflectorHandler)
     .addErrorHandlers(
         ErrorHandler)
     .addRequestInterceptors(
