@@ -8,29 +8,30 @@
 module.exports = {
     en: {
         translation: {
-            WELCOME_MSG: `Bienvenido a Estado del Subte de Buenos Aires! Cuál es tu consulta?`,
-            WELCOME_REPROMPT_MSG: `Qué deseas consultar?`,
-            SINGLE_LINE_STATUS_RESPONSE_MSG: `La línea {{line}} se encuentra con una alerta {{lineStatus}}.`,
-            SINGLE_LINE_LISTEN_MSG: `Deseas hacer otra consulta sobre el estado del Subte?`,
-            HELP_MSG: `Puedo apuntarme tu fecha de nacimiento. Dime la fecha o dime de acordarme de tu cumpleaños. Qué prefieres?`,
-            GOODBYE_MSG: `Hasta la próxima!`,
-            REFLECTOR_MSG: `Has invocado {{intentName}}`,
-            ERROR_MSG: `Perdona, no he entendido. Puedes repetir?`,
-            REQUEST_ERROR_MSG: 'Parece que hay un problema con el servicio de información, por favor intenta en unos minutos.'
+            WELCOME_MSG: `Welcome to Buenos Aires Subway status! What do you want to know?`,
+            WELCOME_REPROMPT_MSG: `What do you want to know?`,
+            SINGLE_LINE_STATUS_RESPONSE_MSG: `Line {{line}} is currently with an alert. {{lineStatus}}`,
+            SINGLE_LINE_NORMAL_STATUS_RESPONSE_MSG : 'Line {{line}} it\'s moving normal. Have a nice trip!',
+            SINGLE_LINE_LISTEN_MSG: `Do you want to know another Subway status?`,
+            HELP_MSG: `I can tell you the status of any line in the Buenos Aires Subway in realtime, or even all of it! If you want to know the status of an specific line, just ask: How it is Line A? Or if you want to know the status of all lines, just ask: What is the Subway general status?`,
+            GOODBYE_MSG: `See you later!`,
+            REFLECTOR_MSG: `You have invoked {{intentName}}`,
+            ERROR_MSG: `Sorry I did not catch that, Can you repeat please?`,
+            REQUEST_ERROR_MSG: 'It seems like there is a problem with information service. Please come back in a few minutes'
         }
     },
     es: {
         translation: {
             WELCOME_MSG: `Bienvenido a Estado del Subte de Buenos Aires! Cuál es tu consulta?`,
             WELCOME_REPROMPT_MSG: `Qué deseas consultar?`,
-            SINGLE_LINE_STATUS_RESPONSE_MSG: `La línea {{line}} se encuentra con una alerta. {{lineStatus}}.`,
+            SINGLE_LINE_STATUS_RESPONSE_MSG: `La línea {{line}} se encuentra con una alerta. {{lineStatus}}`,
             SINGLE_LINE_NORMAL_STATUS_RESPONSE_MSG : 'La línea {{line}} se encuentra circulando con normalidad. Buen viaje!',
             SINGLE_LINE_LISTEN_MSG: `Deseas hacer otra consulta sobre el estado del Subte?`,
             HELP_MSG: `Puedo informarte el estado en tiempo real de la línea de Subte que quieras, o incluso de todas! Si quieres saber el estado de una línea específica, solo pregúntame: Cómo está la línea A? O, si quieres saber el estado de todas las líneas, pregúntame: Cuál es el estado general del Subte?`,
             GOODBYE_MSG: `Hasta la próxima!`,
             REFLECTOR_MSG: `Has invocado {{intentName}}`,
             ERROR_MSG: `Perdona, no he entendido. Puedes repetir?`,
-            REQUEST_ERROR_MSG: 'Parece que hay un problema con el servicio de información, por favor intenta en unos minutos.'
+            REQUEST_ERROR_MSG: 'Parece que hay un problema con el servicio de información, por favor intenta en unos minutos'
         }
     }
 }
