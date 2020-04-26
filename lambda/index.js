@@ -61,7 +61,6 @@ const SingleStatusIntentHandler = {
     async handle(handlerInput) {
         const { requestEnvelope } = handlerInput;
         const line = handlerInput.requestEnvelope.request.intent.slots.line.value;
-        
         let lineStatus = getSubteStatus(line, handlerInput);
         
         let speakOutput = '';
