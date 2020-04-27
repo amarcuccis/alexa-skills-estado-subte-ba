@@ -269,9 +269,9 @@ function getSubteStatus(inputLine, handlerInput) {
 function getSubteGeneralStatus(handlerInput) {
     let messageStatus;
     
-    if(apiResponse != undefined){
-        doAPICallout();
-    }
+    //if(apiResponse == undefined){
+    //    doAPICallout();
+    //}
 
     //requestIsError = true;
 
@@ -327,7 +327,7 @@ function getSubteGeneralStatus(handlerInput) {
 
                 let linesListMsg = '';
                 for(let line of lines) {
-                    lineWord = line.slice(line.length-1);
+                    let lineWord = line.slice(line.length-1);
                     linesListMsg += lineWord + ', ';
                 }
 
