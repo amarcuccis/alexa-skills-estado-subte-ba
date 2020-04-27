@@ -116,7 +116,7 @@ const GeneralStatusIntentHandler = {
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .reprompt(listenOutput)
-            .withShouldEndSession(false)
+            .withShouldEndSession(true)
             .getResponse();
     }
 };
