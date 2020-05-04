@@ -10,7 +10,7 @@
               "s3": {
                 "bucket": "ask-subteba-askclidef-useast1-1587838275247",
                 "key": "endpoint/build.zip",
-                "objectVersion": "AzBhqUhobcTdba7dg1DOTBGn8t8VVooQ"
+                "objectVersion": "omHblxu31u0U5b.EOhNoOpn2tx3D_lFH"
               },
               "stackId": "arn:aws:cloudformation:us-east-1:642988044808:stack/ask-EstadodelSubteBA-default-skillStack-1587838275247/786f6150-8720-11ea-be72-0e43f2110cc5"
             }
@@ -18,11 +18,11 @@
         }
       },
       "skillMetadata": {
-        "lastDeployHash": "hRFtzOIUTW1yQnpS5UpI1X3axyQ="
+        "lastDeployHash": "jG5hc8n9KjzOfQ9wqtZ1mcN1MI8="
       },
       "code": {
         "default": {
-          "lastDeployHash": "0siJD/yqVEcHqtRdi9Ff4+wHf9g="
+          "lastDeployHash": "HU0CDGFBS0+hpLn882AKWJuK2CQ="
         }
       }
     }

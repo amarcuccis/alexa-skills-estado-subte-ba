@@ -8,34 +8,44 @@
 module.exports = {
     en: {
         translation: {
-            WELCOME_MSG: `Hello! Welcome to Cake walk. What is your birthday?`,
-            WELCOME_REPROMPT_MSG: `I was born Nov. 6th, 2014. When were you born?`,
-            WELCOME_BACK_MSG: `Welcome back. It looks like there is {{count}} day until your {{age}}th birthday.`,
-            WELCOME_BACK_MSG_plural: `Welcome back. It looks like there are {{count}} days until your {{age}}th birthday.`,
-            HAPPY_BIRTHDAY_MSG: `Happy {{age}}th birthday!`,
-            REGISTER_BIRTHDAY_MSG: `Thanks, I'll remember that you were born {{month}} {{day}} {{year}}.`,
-            HELP_MSG: `You can tell me your date of birth and I'll take note. You can also just say, "register my birthday" and I will guide you. Which one would you like to try?`,
-            GOODBYE_MSG: `Goodbye!`,
-            REFLECTOR_MSG: `You just triggered {{intentName}}`,
-            ERROR_MSG: `Sorry, I couldn't understand what you said. Can you reformulate?`,
-            ERROR_TIMEZONE_MSG: `I can't determine your timezone. Please check your device settings and make sure a timezone was selected. After that please reopen the skill and try again!`
+            WELCOME_MSG: `Welcome to Buenos Aires Subway status! What do you want to know?`,
+            WELCOME_LISTEN_MSG: `What do you want to know?`,
+            SINGLE_LINE_STATUS_RESPONSE_MSG: `Line: {{line}}, is currently with an alert. {{lineStatus}}`,
+            SINGLE_LINE_NORMAL_STATUS_RESPONSE_MSG : 'Line: {{line}}, it\'s moving on time. Have a nice trip!',
+            PLURAL_LINE_STATUS_RESPONSE_MSG : 'Lines {{lines}} are with an alert. {{linesStatus}}',
+            GRAL_STATUS_PRESENTATION_MSG : 'This is the Subway status. {{allLineAlerts}}',
+            GRAL_STATUS_ALL_LINES_NORMAL_MSG : 'This is the Subway general status. All lines are moving on time. Have a nice trip!',
+            GRAL_STATUS_ALL_LINES_WITH_ALERT : 'All the lines have an alert. ',
+            GRAL_STATUS_ONE_LINE_WITH_ALERT : 'There is only one line with an alert. ',
+            GRAL_STATUS_REST_OF_LINES_NORMAL_MSG : 'The rest of the lines are moving on time. ',
+            GRAL_STATUS_ONE_LINE_NORMAL : 'There is only one line moving on time. ',
+            ASK_ANOTHER_INFO_MSG: `Do you want to do another Subway status question?`,
+            HELP_MSG: `I can tell you the status of any line in the Buenos Aires Subway in realtime, or even all of it! If you want to know the status of an specific line, just ask: How it is Line A? Or if you want to know the status of all lines, just ask: What is the Subway general status?`,
+            GOODBYE_MSG: `See you later!`,
+            REFLECTOR_MSG: `You have invoked {{intentName}}`,
+            ERROR_MSG: `Sorry I did not catch that, Can you repeat please?`,
+            REQUEST_ERROR_MSG: 'It seems like there is a problem with information service. Please come back in a few minutes'
         }
     },
     es: {
         translation: {
-            WELCOME_MSG: `Bienvenido a Estado del Subte de Buenos Aires! Cuál es tu consulta?`,
-            WELCOME_REPROMPT_MSG: `Qué deseas consultar?`,
-            WELCOME_BACK_MSG: `Hola otra vez! Falta {{count}} día para que cumplas {{age}} año.`, 
-            WELCOME_BACK_MSG_plural: `Hola otra vez! Faltan {{count}} días para que cumplas {{age}} años.`,
-            HAPPY_BIRTHDAY_MSG: `Feliz Cumpleaños! Hoy cumples {{count}} año!`,
-            HAPPY_BIRTHDAY_MSG_plural: `Feliz Cumpleaños! Hoy cumples {{count}} años!`,
-            SINGLE_LINE_STATUS_RESPONSE_MSG: `La línea {{line}} se encuentra {{lineStatus}}.`,
-            SINGLE_LINE_REPROMPT_MSG: `Deseas hacer otra consulta sobre el Subte?`,
-            HELP_MSG: `Puedo apuntarme tu fecha de nacimiento. Dime la fecha o dime de acordarme de tu cumpleaños. Qué prefieres?`,
-            GOODBYE_MSG: `Hasta luego!`,
+            WELCOME_MSG: `Bienvenido a Estado del Subte de Buenos Aires! Qué quieres saber?`,
+            WELCOME_LISTEN_MSG: `Qué deseas consultar?`,
+            SINGLE_LINE_STATUS_RESPONSE_MSG: `La línea {{line}}, se encuentra con una alerta. {{lineStatus}}`,
+            SINGLE_LINE_NORMAL_STATUS_RESPONSE_MSG : 'La línea {{line}}, se encuentra circulando con normalidad. Buen viaje!',
+            PLURAL_LINE_STATUS_RESPONSE_MSG : 'Las líneas, {{lines}} se encuentran con una alerta. {{linesStatus}}',
+            GRAL_STATUS_PRESENTATION_MSG : 'Aquí tienes el estado general del Subte. {{allLineAlerts}}',
+            GRAL_STATUS_ALL_LINES_NORMAL_MSG : 'Aquí tienes el estado general del Subte. Todas las líneas se encuentran circulando con normalidad. Buen viaje!',
+            GRAL_STATUS_ALL_LINES_WITH_ALERT : 'Todas las líneas se encuentran con una alerta. ',
+            GRAL_STATUS_ONE_LINE_WITH_ALERT : 'Solo hay una línea con alerta. ',
+            GRAL_STATUS_REST_OF_LINES_NORMAL_MSG : 'Las demás líneas circulan con normalidad.',
+            GRAL_STATUS_ONE_LINE_NORMAL : 'Solo hay una línea que se encuentra circulando con normalidad. ',
+            ASK_ANOTHER_INFO_MSG: `Deseas hacer otra consulta sobre el estado del Subte?`,
+            HELP_MSG: `Puedo informarte el estado en tiempo real de la línea de Subte que quieras, o incluso de todas! Si quieres saber el estado de una línea específica, solo pregúntame: Cómo está la línea A? O, si quieres saber el estado de todas las líneas, pregúntame: Cuál es el estado general del Subte?`,
+            GOODBYE_MSG: `Hasta la próxima!`,
             REFLECTOR_MSG: `Has invocado {{intentName}}`,
-            ERROR_MSG: `Perdona, no entendido. Puedes repetir?`,
-            ERROR_TIMEZONE_MSG: `No he potido determinar tu zona horaria. Verifica la configuración de tu dispositivo, y intenta otra vez.`
+            ERROR_MSG: `Perdona, no he entendido. Puedes repetir?`,
+            REQUEST_ERROR_MSG: 'Parece que hay un problema con el servicio de información, por favor intenta en unos minutos'
         }
     }
 }

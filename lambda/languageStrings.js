@@ -29,11 +29,11 @@ module.exports = {
     },
     es: {
         translation: {
-            WELCOME_MSG: `Bienvenido a Estado del Subte de Buenos Aires! Cuál es tu consulta?`,
+            WELCOME_MSG: `Bienvenido a Estado del Subte de Buenos Aires! Qué quieres saber?`,
             WELCOME_LISTEN_MSG: `Qué deseas consultar?`,
             SINGLE_LINE_STATUS_RESPONSE_MSG: `La línea {{line}}, se encuentra con una alerta. {{lineStatus}}`,
             SINGLE_LINE_NORMAL_STATUS_RESPONSE_MSG : 'La línea {{line}}, se encuentra circulando con normalidad. Buen viaje!',
-            PLURAL_LINE_STATUS_RESPONSE_MSG : 'Las líneas {{lines}} se encuentran con una alerta. {{linesStatus}}',
+            PLURAL_LINE_STATUS_RESPONSE_MSG : 'Las líneas, {{lines}} se encuentran con una alerta. {{linesStatus}}',
             GRAL_STATUS_PRESENTATION_MSG : 'Aquí tienes el estado general del Subte. {{allLineAlerts}}',
             GRAL_STATUS_ALL_LINES_NORMAL_MSG : 'Aquí tienes el estado general del Subte. Todas las líneas se encuentran circulando con normalidad. Buen viaje!',
             GRAL_STATUS_ALL_LINES_WITH_ALERT : 'Todas las líneas se encuentran con una alerta. ',

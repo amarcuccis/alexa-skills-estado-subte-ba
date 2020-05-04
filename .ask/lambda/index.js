@@ -1,6 +1,8 @@
-// This sample demonstrates handling intents from an Alexa skill using the Alexa Skills Kit SDK (v2).
-// Please visit https://alexa.design/cookbook for additional examples on implementing slots, dialog management,
-// session persistence, api calls, and more.
+/**
+ * @author Alex Marcucci
+ * @date 04/2020
+ * @version 0.1
+ */
 
 /////////////////////////////////
 // Modules Definition
@@ -8,106 +10,97 @@
 
 // ASK SDK
 const Alexa = require('ask-sdk-core');
+
 // ASK SDK adapter to connecto to Amazon S3
-const persistenceAdapter = require('ask-sdk-s3-persistence-adapter');
+let persistenceAdapter; // = require('ask-sdk-s3-persistence-adapter');
+
 // i18n library dependency, we use it below in a localisation interceptor
 const i18n = require('i18next');
-// We import a language strings object containing all of our strings.
-// The keys for each string will then be referenced in our code, e.g. handlerInput.t('WELCOME_MSG')
+
+// Used to get the translations strings
 const languageStrings = require('./languageStrings');
-// We will use the moment.js package in order to make sure that we calculate the date correctly
-//const moment = require('moment-timezone');
+
+// Useful to make the HTTPS request to API Transporte
+//const https = require('https');
+const https = require('https');
+
+// Filled with the successful response of the API Transporte
+let apiResponse;
+
+//MOCK 5 with alerts: 4 the same, 1 diff. 1 line normal
+//let apiResponse = '{"header":{"gtfs_realtime_version":"2.0","incrementality":0,"timestamp":1587841510},"entity":[{"id":"Alert_LineaA","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaA","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaB","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaB","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"circula con servicio limitado en las estaciones Medrano y Alem.","language":"es"}]},"description_text":{"translation":[{"text":"circula con servicio limitado en las estaciones Medrano y Alem.","language":"es"}]}}},{"id":"Alert_LineaC","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaC","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaE","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaE","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaH","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaH","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}}]}';
+
+// MOCK all normal
+//let apiResponse = '{"header":{"gtfs_realtime_version":"2.0","incrementality":0,"timestamp":1587841510},"entity":[]}';
+
+// MOCK 1 alert
+//let apiResponse = '{"header":{"gtfs_realtime_version":"2.0","incrementality":0,"timestamp":1587841510},"entity":[{"id":"Alert_LineaB","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaB","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"circula con servicio limitado en las estaciones Medrano y Alem.","language":"es"}]},"description_text":{"translation":[{"text":"circula con servicio limitado en las estaciones Medrano y Alem.","language":"es"}]}}}]}';
+
+//MOCK all 6 with alerts
+//let apiResponse = '{"header":{"gtfs_realtime_version":"2.0","incrementality":0,"timestamp":1587841510},"entity":[{"id":"Alert_LineaA","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaA","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaB","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaB","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaC","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaC","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaD","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaD","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaE","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaE","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}},{"id":"Alert_LineaH","is_deleted":false,"trip_update":null,"vehicle":null,"alert":{"active_period":[],"informed_entity":[{"agency_id":"","route_id":"LineaH","route_type":0,"trip":null,"stop_id":""}],"cause":12,"effect":6,"url":null,"header_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]},"description_text":{"translation":[{"text":"Por protocolo de prevención: circula con un servicio especial. Info www.metrovias.com.ar","language":"es"}]}}}]}';
+
+// If the HTTPS response is not successful or there is another problem, is marked true  
+let requestIsError = false;
+
+// True if none alert was found for the specific Subte Line
+let lineAlertFound = false;
+
+let clientId = process.env.GCBA_API_CLIENTID;
+let clientSecret = process.env.GCBA_API_CLIENTSECRET;
+
+const options = {
+    "method": "GET",
+    "hostname": 'apitransporte.buenosaires.gob.ar',
+    "port": null,
+    "path": '/subtes/serviceAlerts?client_id='+clientId+'&client_secret='+clientSecret+'&json=1',
+    "headers": {
+        'Cache-Control': 'no-cache',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+    }
+};
+
+const requestStatusCacheMaxTime = 3;
+
+if(isAlexaHosted()) {
+    const {S3PersistenceAdapter} = require('ask-sdk-s3-persistence-adapter');
+    persistenceAdapter = new S3PersistenceAdapter({ 
+        bucketName: process.env.S3_PERSISTENCE_BUCKET,
+        objectKeyGenerator: keyGenerator
+    });
+} else {
+    // IMPORTANT: don't forget to give DynamoDB access to the role you're to run this lambda (IAM)
+    const {DynamoDbPersistenceAdapter} = require('ask-sdk-dynamodb-persistence-adapter');
+    persistenceAdapter = new DynamoDbPersistenceAdapter({ 
+        tableName: 'global_attr_table',
+        createTable: true,
+        partitionKeyGenerator: keyGenerator
+    });
+}
+
+// This function is an indirect way to detect if this is part of an Alexa-Hosted skill
+function isAlexaHosted() {
+    return process.env.S3_PERSISTENCE_BUCKET ? true : false;
+}
+
+// This function establishes the primary key of the database as the skill id (hence you get global persistence, not per user id)
+function keyGenerator(requestEnvelope) {
+    if (requestEnvelope
+        && requestEnvelope.context
+        && requestEnvelope.context.System
+        && requestEnvelope.context.System.application
+        && requestEnvelope.context.System.application.applicationId) {
+      return requestEnvelope.context.System.application.applicationId; 
+    }
+    throw 'Cannot retrieve app id from request envelope!';
+}
 
 /////////////////////////////////
 // Handlers Definition
 /////////////////////////////////
 
 /**
- * Handles LaunchRequest requests sent by Alexa when a birthdate has been registered
- * Note : this type of request is send when the user invokes your skill without providing a specific intent.
-const HasBirthdayLaunchRequestHandler = {
-    canHandle(handlerInput) {
-        const { attributesManager } = handlerInput;
-        const sessionAttributes = attributesManager.getSessionAttributes() || {};
-
-        const year = sessionAttributes.hasOwnProperty('year') ? sessionAttributes.year : 0;
-        const month = sessionAttributes.hasOwnProperty('month') ? sessionAttributes.month : 0;
-        const day = sessionAttributes.hasOwnProperty('day') ? sessionAttributes.day : 0;
-
-        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest'
-            && year
-            && month
-            && day;
-    },
-    async handle(handlerInput) {
-        const { serviceClientFactory, requestEnvelope, attributesManager } = handlerInput;
-        const deviceId = Alexa.getDeviceId(requestEnvelope)
-        const sessionAttributes = attributesManager.getSessionAttributes() || {};
-
-        const year = sessionAttributes.hasOwnProperty('year') ? sessionAttributes.year : 0;
-        const month = sessionAttributes.hasOwnProperty('month') ? sessionAttributes.month : 0;
-        const day = sessionAttributes.hasOwnProperty('day') ? sessionAttributes.day : 0;
-
-        let userTimeZone;
-        try {
-            const upsServiceClient = serviceClientFactory.getUpsServiceClient();
-            userTimeZone = await upsServiceClient.getSystemTimeZone(deviceId);
-        } catch (error) {
-            if (error.name !== 'ServiceError') {
-                const errorSpeechText = handlerInput.t('ERROR_TIMEZONE_MSG');
-                return handlerInput.responseBuilder.speak(errorSpeechText).getResponse();
-            }
-            console.log('error', error.message);
-        }
-        console.log('userTimeZone', userTimeZone);
-
-        // getting the current date with the time set to the start of the day, aka 00:00AM
-        const currentDate = moment().tz(userTimeZone).startOf('day')
-        // getting the current year
-        const currentYear = currentDate.year();
-        
-        console.log('currentDate:', currentDate.toString());
-        
-        // getting the next birthday
-        const dateStr = currentYear.toString() + ' ' + month + ' ' + day.toString();
-        const locale = Alexa.getLocale(requestEnvelope);
-        let nextBirthday = moment(dateStr, 'YYYY MMM DD', locale);
-        console.log('nextBirthday:', nextBirthday.toString())
-
-        // calculate the difference between the current date and the next birthday
-        let diffDays = nextBirthday.diff(currentDate, 'days');
-
-        // setting the default speakOutput to Happy xth Birthday!! 
-        // Alexa will automatically correct the ordinal for you.
-        // no need to worry about when to use st, th, rd
-        let age = currentYear - year;
-        let speakOutput = handlerInput.t('HAPPY_BIRTHDAY_MSG', { age: age });
-
-        // checking if birthday is still to happen or...
-        if (diffDays > 0) {
-            speakOutput = handlerInput.t('WELCOME_BACK_MSG', { count: diffDays, age: age });
-        } 
-        // has already happened this year
-        else if (diffDays < 0) {
-            // in this case, add one year to the next birthday,
-            nextBirthday = nextBirthday.add(1, 'Y');
-            // recalculate the difference,
-            diffDays = nextBirthday.diff(currentDate, 'days')
-            // and add on extra year to the age
-            age++
-            speakOutput = handlerInput.t('WELCOME_BACK_MSG', { count: diffDays, age: age });
-        }
-
-        return handlerInput.responseBuilder
-            .speak(speakOutput)
-            .getResponse();
-    }
-};
-*/
-
-/**
- * Handles LaunchRequest requests sent by Alexa when no birthdate has been registered
- * Note : this type of request is send when the user invokes your skill without providing a specific intent.
+ * Handles LaunchRequest requests sent by Alexa when intent is invoked
  */
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
@@ -115,7 +108,7 @@ const LaunchRequestHandler = {
     },
     handle(handlerInput) {
         const speakOutput = handlerInput.t('WELCOME_MSG');
-        const repromptOutput = handlerInput.t('WELCOME_REPROMPT_MSG');
+        const repromptOutput = handlerInput.t('WELCOME_LISTEN_MSG');
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
@@ -125,100 +118,251 @@ const LaunchRequestHandler = {
 };
 
 /**
- * Handles CaptureBirthdayIntent requests sent by Alexa (when a user specify a birthdate)
- * Note : this request is sent when the user makes a request that corresponds to CaptureBirthdayIntent intent defined in your intent schema.
+ * Handles SingleStatusIntentHandler requests sent by Alexa (when a user specify a Subte Line)
  */
 const SingleStatusIntentHandler = {
     canHandle(handlerInput) {
-        return Alexa.getIntentName(handlerInput.requestEnvelope) === 'SingleLineStatusIntent';
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'LaunchRequest' ||
+            (request.type === 'IntentRequest' && request.intent.name === 'SingleLineStatusIntent');
     },
     async handle(handlerInput) {
-        const { attributesManager, requestEnvelope } = handlerInput;
+        let lastStatus = '';
 
-        const line = Alexa.getSlotValue(requestEnvelope, 'line');
-        let lineStatus = 'normal, haciendo su recorrido desde sus cabeceras'; //This should be the status got from Subte API
+        handlerInput.attributesManager.getPersistentAttributes()
+            .then((attributes) => {
+                console.log('===== sessionsAtts: '+JSON.stringify(attributes));
+                console.log('===== sessionsAtts hasOwnProperty: '+attributes.hasOwnProperty('lastStatus'));
+                lastStatus = attributes.hasOwnProperty('lastStatus') ? JSON.parse(attributes.lastStatus) : null;
+            })
+            .catch((error) => {
+                console.log('===== error getting atts: '+error.message);
+            })
 
-        let clientId = '31f7bcdaff324d6a82b181afe81f6c15';
-        let clientSecret = '99A456EB8E544255A7EFB465764d3bB7';
-        const url = 'https://apitransporte.buenosaires.gob.ar/subtes/serviceAlerts?client_id='+clientId+'&client_secret='+clientSecret+'&json=1';
-        const request = require('request');
+        const slots = handlerInput.requestEnvelope.request.intent.slots;
+        console.log('==== slots: '+slots);
+        
+        let line = slots['line'].value;
+        console.log('==== line: '+line);
+
+        if(lastStatus !== null) {
+            const modifiedMinutesDifference = Date.now() - parseInt(lastStatus.lastModified) / 1000 / 60;
+
+            console.log('===== Date now: '+Date.now());
+            console.log('===== lastStatus date: '+ parseInt(lastStatus.lastModified) / 1000 / 60);
+            console.log('===== sessionsAtts: '+JSON.stringify(lastStatus.status));
+
+            if(modifiedMinutesDifference > requestStatusCacheMaxTime) {
+                console.log('====== diff minutes are more than 3: '+modifiedMinutesDifference);
+                    const response = await httpGet(options,handlerInput);
+                    console.log('======= after httpGET: '+apiResponse);
+
+                    if(requestIsError) {
+                        apiResponse = lastStatus.status;
+                    } else {
+                        apiResponse = response;
+                    }
+            } else {
+                console.log('====== diff minutes are less than 3');
+                apiResponse = lastStatus.status;
+            }
+        } else {
+            console.log('====== persistance is null: '+lastStatus);
+            const response = await httpGet(options,handlerInput);
+            apiResponse = response;
+            console.log('======= after httpGET: '+apiResponse);
+        }
+        
+        let lineStatus;
+
+        if(line !== undefined && !requestIsError && apiResponse !== undefined) {
+            
+            let lineAlertId = 'Alert_Linea'+line.toUpperCase();
+            let allLines = apiResponse.entity;
+            
+            console.log('===== lineAlertId: '+lineAlertId);
+            console.log('===== allLines: '+allLines);
     
-        request.get(url, (error, response, body) => {
-            // let json = JSON.parse(body);
-            console.log('error:', error); // Print the error if one occurred
-            console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-            console.log('body:', body); // Print the body
-        });
+            for (var i = 0; i < allLines.length; i++) {
+                let line = allLines[i].id;
+                console.log('======= line: '+allLines[i].id);
+                console.log('======== linea api desc: '+allLines[i].alert.description_text.translation[0].text);
+                if(lineAlertId === line) {
+                lineStatus = allLines[i].alert.description_text.translation[0].text;
+                lineAlertFound = true;
+                break;
+                }
+            }
+    
+            console.log('lineAlertId: '+lineAlertId);
+            console.log('mensaje: '+lineStatus);
+        } else {
+            lineStatus = handlerInput.t('REQUEST_ERROR_MSG');
+            requestIsError = true;
+        }
 
-        const speakOutput = handlerInput.t('SINGLE_LINE_STATUS_RESPONSE_MSG', { line: line, lineStatus: lineStatus });
-        const repromptOutput = handlerInput.t('SINGLE_LINE_REPROMPT_MSG');
+        let speakOutput = '';
+        if(requestIsError) {
+            speakOutput = lineStatus; // If error, lineStatus comes as a complete Error message
+        } else if(!lineAlertFound) {
+            speakOutput = handlerInput.t('SINGLE_LINE_NORMAL_STATUS_RESPONSE_MSG', { line: line });
+        } else {
+            speakOutput = handlerInput.t('SINGLE_LINE_STATUS_RESPONSE_MSG', { line: line, lineStatus: lineStatus });
+        }
+        
+        const listenOutput = handlerInput.t('ASK_ANOTHER_INFO_MSG');
         
         return handlerInput.responseBuilder
             .speak(speakOutput)
-            .reprompt(repromptOutput)
-            .withShouldEndSession(false) // force the skill to close the session after confirming the birthday date
+            .reprompt(listenOutput)
+            .withShouldEndSession(requestIsError)
             .getResponse();
     }
 };
 
 /**
- * Subte Lines Map that has the slots values as keys and returns the propper value to be passed to the API request
+ * Handles GeneralStatusIntentHandler requests sent by Alexa (when a user asks for general Subte status)
  */
-const lineAlertNamebyWord = new Map([
-    ['A' : 'Alert_LineaA'],
-    ['B' : 'Alert_LineaB'],
-    ['C' : 'Alert_LineaC'],
-    ['D' : 'Alert_LineaD'],
-    ['E' : 'Alert_LineaE'],
-    ['H' : 'Alert_LineaH']
-]);
+const GeneralStatusIntentHandler = {
+    canHandle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'LaunchRequest' ||
+            (request.type === 'IntentRequest' && request.intent.name === 'GeneralStatusIntent');
+    },
+    async handle(handlerInput) {
+        let lastStatus = '';
 
-function getSubteStatus(inputLine) {
-    let lineAlertId = lineAlertNamebyWord.get(inputLine);
-    let statusResponse = JSON.parse(doAPICallout());
-    let allLines = statusResponse.entity;
-    let messageStatus='';
+        handlerInput.attributesManager.getPersistentAttributes()
+            .then((attributes) => {
+                console.log('===== sessionsAtts: '+JSON.stringify(attributes));
+                console.log('===== sessionsAtts hasOwnProperty: '+attributes.hasOwnProperty('lastStatus'));
+                lastStatus = attributes.hasOwnProperty('lastStatus') ? JSON.parse(attributes.lastStatus) : null;
+            })
+            .catch((error) => {
+                console.log('===== error getting atts: '+error.message);
+            })
 
-    for (var i = 0; i < allLines.length; i++) {
-        let line = allLines[i];
-        if(lineAlertId == line.id) {
-            messageStatus = line.alert.description_text.translation.text;
-            break;
+        if(lastStatus !== null) {
+            const modifiedMinutesDifference = Date.now() - parseInt(lastStatus.lastModified) / 1000 / 60;
+
+            console.log('===== Date now: '+Date.now());
+            console.log('===== lastStatus date: '+ parseInt(lastStatus.lastModified) / 1000 / 60);
+            console.log('===== sessionsAtts: '+JSON.stringify(lastStatus.status));
+
+            if(modifiedMinutesDifference > requestStatusCacheMaxTime) {
+                console.log('====== diff minutes are more than 3: '+modifiedMinutesDifference);
+                    const response = await httpGet(options,handlerInput);
+                    console.log('======= after httpGET: '+apiResponse);
+
+                    if(requestIsError) {
+                        apiResponse = lastStatus.status;
+                    } else {
+                        apiResponse = response;
+                    }
+            } else {
+                console.log('====== diff minutes are less than 3');
+                apiResponse = lastStatus.status;
+            }
+        } else {
+            console.log('====== persistance is null: '+lastStatus);
+            const response = await httpGet(options,handlerInput);
+            apiResponse = response;
+            console.log('======= after httpGET: '+apiResponse);
         }
+
+        if(!requestIsError && apiResponse != undefined) {
+
+            let allAlerts = apiResponse.entity;
+            let lineAlertsByMessage = new Map();
+            const subteLinesQuantity = 6;
+            const alertsQuantity = allAlerts.length;
+            let allLinesAlertsDesc = '';
+            let allLinesHaveAlerts = alertsQuantity === subteLinesQuantity;
+            let onlyOneLineWithAlert = alertsQuantity === 1;
+            let onlyOneLineNormal = alertsQuantity === 5;
+            
+            console.log('== allAlerts: '+allAlerts);
+    
+            for(var i = 0; i < alertsQuantity; i++) {
+                let line = allAlerts[i].id;
+                let alertMessage = allAlerts[i].alert.description_text.translation[0].text;
+                console.log('== line: '+line);
+    
+                if(!lineAlertsByMessage.has(alertMessage)) {
+                    lineAlertsByMessage.set(alertMessage,[]);
+                }
+                let msgLinesList = lineAlertsByMessage.get(alertMessage);
+                msgLinesList.push(line);
+                lineAlertsByMessage.set(alertMessage,msgLinesList);
+    
+                console.log('=== new linea in map: ' + alertMessage + ' : ' + line);
+            }
+    
+            if(lineAlertsByMessage.size === 0) {
+                messageStatus = handlerInput.t('GRAL_STATUS_ALL_LINES_NORMAL_MSG');
+    
+            } else {
+    
+                for(let [lineAlert, lines] of lineAlertsByMessage.entries()) {
+    
+                    console.log('==== inside lineAlertsByMessage: '+lineAlertsByMessage);
+                    console.log('==== lineAlert: '+lineAlert);
+                    console.log('==== lines: '+lines);
+    
+                    let linesWithSameAlert = lines.length;
+    
+                    console.log('==== linesWithSameAlert: '+lines.length);
+                    console.log('==== lines.length === 1: '+lines.length == 1);
+                    console.log('==== linesWithSameAlert > 1: '+lines.length > 1);
+    
+                    let linesListMsg = '';
+                    for(let line of lines) {
+                        let lineWord = line.slice(line.length-1);
+                        linesListMsg += lineWord + ', ';
+                    }
+    
+                    if(linesWithSameAlert === 1) {
+                        allLinesAlertsDesc += handlerInput.t('SINGLE_LINE_STATUS_RESPONSE_MSG', { line: linesListMsg, lineStatus: lineAlert }) + '. ';
+    
+                    }
+                    if (linesWithSameAlert > 1) {
+                        allLinesAlertsDesc += handlerInput.t('PLURAL_LINE_STATUS_RESPONSE_MSG', { lines: linesListMsg, linesStatus: lineAlert }) + '. ';
+                    }
+                }
+    
+                if(allLinesHaveAlerts) {
+                    messageStatus = handlerInput.t('GRAL_STATUS_ALL_LINES_WITH_ALERT') +
+                        handlerInput.t('GRAL_STATUS_PRESENTATION_MSG', { allLineAlerts: allLinesAlertsDesc });
+    
+                } else if(onlyOneLineNormal) {
+                    messageStatus = handlerInput.t('GRAL_STATUS_PRESENTATION_MSG', { allLineAlerts: allLinesAlertsDesc }) +
+                        handlerInput.t('GRAL_STATUS_REST_OF_LINES_NORMAL_MSG');
+    
+                } else if (onlyOneLineWithAlert) {
+                    messageStatus = handlerInput.t('GRAL_STATUS_PRESENTATION_MSG', { allLineAlerts: allLinesAlertsDesc }) +
+                        handlerInput.t('GRAL_STATUS_REST_OF_LINES_NORMAL_MSG');
+                }
+            }
+            console.log('==== allLinesAlertsDesc: '+allLinesAlertsDesc);
+            console.log('==== mensaje: '+messageStatus);
+    
+        } else {
+            messageStatus = handlerInput.t('REQUEST_ERROR_MSG');
+            requestIsError = true;
+        }
+
+        const listenOutput = handlerInput.t('ASK_ANOTHER_INFO_MSG');
+        
+        return handlerInput.responseBuilder
+            .speak(messageStatus)
+            .reprompt(listenOutput)
+            .withShouldEndSession(true)
+            .getResponse();
     }
-    return messageStatus;
 };
-
-function doAPICallout(){
-    const https = require('https');
-    let clientId = '31f7bcdaff324d6a82b181afe81f6c15';
-    let clientSecret = '99A456EB8E544255A7EFB465764d3bB7';
-
-    https.get('https://apitransporte.buenosaires.gob.ar/subtes/serviceAlerts?client_id='+clientId+'&client_secret='+clientSecret+'&json=1', (resp) => {
-    let data = '';
-
-    // A chunk of data has been recieved.
-    resp.on('data', (chunk) => {
-        data += chunk;
-    });
-
-    // The whole response has been received. Print out the result.
-    resp.on('end', () => {
-        console.log(JSON.parse(data).explanation);
-    });
-
-    }).on("error", (err) => {
-        console.log("Error: " + err.message);
-    });
-
-    return data;
-};
-
-
 
 /**
  * Handles AMAZON.HelpIntent requests sent by Alexa 
- * Note : this request is sent when the user makes a request that corresponds to AMAZON.HelpIntent intent defined in your intent schema.
  */
 const HelpIntentHandler = {
     canHandle(handlerInput) {
@@ -237,7 +381,6 @@ const HelpIntentHandler = {
 
 /**
  * Handles AMAZON.CancelIntent & AMAZON.StopIntent requests sent by Alexa 
- * Note : this request is sent when the user makes a request that corresponds to AMAZON.CancelIntent & AMAZON.StopIntent intents defined in your intent schema.
  */
 const CancelAndStopIntentHandler = {
     canHandle(handlerInput) {
@@ -269,26 +412,6 @@ const SessionEndedRequestHandler = {
     }
 };
 
-/* *
- * The intent reflector is used for interaction model testing and debugging.
- * It will simply repeat the intent the user said. You can create custom handlers for your intents 
- * by defining them above, then also adding them to the request handler chain below 
- * */
-const IntentReflectorHandler = {
-    canHandle(handlerInput) {
-        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest';
-    },
-    handle(handlerInput) {
-        const intentName = Alexa.getIntentName(handlerInput.requestEnvelope);
-        const speakOutput = handlerInput.t('REFLECTOR_MSG', { intentName: intentName });
-
-        return handlerInput.responseBuilder
-            .speak(speakOutput)
-            //.reprompt('add a reprompt if you want to keep the session open for the user to respond')
-            .getResponse();
-    }
-};
-
 /**
  * Generic error handling to capture any syntax or routing errors. If you receive an error
  * stating the request handler chain is not found, you have not implemented a handler for
@@ -300,7 +423,12 @@ const ErrorHandler = {
     },
     handle(handlerInput, error) {
         console.log(`~~~~ Error handled: ${error.message}`);
-        const speakOutput = handlerInput.t('ERROR_MSG');
+        let speakOutput = '';
+        if(error.message.includes('500')) {
+            speakOutput = handlerInput.t('REQUEST_ERROR_MSG');
+        } else {
+            speakOutput = handlerInput.t('ERROR_MSG');
+        }
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
@@ -308,6 +436,58 @@ const ErrorHandler = {
             .getResponse();
     }
 };
+
+/////////////////////////////////
+// Subte Line Request Definition Helper Functions
+/////////////////////////////////
+
+/**
+ * Makes the HTTPS request to get the Subte status
+ * @returns JSON response with all Subte alerts if any
+ */
+function httpGet(options, handlerInput) {
+    return new Promise(((resolve, reject) => {
+      const request = https.request(options, (response) => {
+        response.setEncoding('utf8');
+        let returnData = '';    
+        if(response.statusCode == 500) {
+            requestIsError = true;
+        } else if (response.statusCode < 200 || response.statusCode >= 300) {
+            requestIsError = true;
+            return reject(new Error(`${response.statusCode}: ${response.req.getHeader('host')} ${response.req.path}`));
+        }    
+        response.on('data', (chunk) => {
+            returnData += chunk;
+        });
+        response.on('end', () => {
+            console.log('==== fucking json: '+returnData);
+            let status = JSON.parse(returnData);
+
+            if(response.statusCode == 200) {
+                let statusObj = {
+                    'lastModified': Date.now(),
+                    'status': status
+                }
+
+                const attributesManager = handlerInput.attributesManager;
+                const lastStatusAttributes = {
+                    'lastStatus' : JSON.stringify(statusObj)
+                };
+                attributesManager.setPersistentAttributes(lastStatusAttributes);
+                attributesManager.savePersistentAttributes();
+            }
+            
+            resolve(status);
+        });    
+        response.on('error', (error) => {
+            requestIsError = true;
+            
+            reject(error);
+        });
+      });
+      request.end();
+    }));
+}
 
 /////////////////////////////////
 // Interceptors Definition
@@ -347,29 +527,6 @@ const LocalisationRequestInterceptor = {
     }
 };
 
-/* *
- * This request interceptor will load the persistent attributes as sessions attributes whatever handler is called.
- * 
- * Note: Below we use async and await ( more info: javascript.info/async-await )
- * It's a way to wrap promises and wait for the result of an external async operation
- * Like getting and saving the persistent attributes
- * 
-const LoadBirthdayInterceptor = {
-    async process(handlerInput) {
-        const { attributesManager } = handlerInput;
-        const sessionAttributes = await attributesManager.getPersistentAttributes() || {};
-
-        const year = sessionAttributes.hasOwnProperty('year') ? sessionAttributes.year : 0;
-        const month = sessionAttributes.hasOwnProperty('month') ? sessionAttributes.month : 0;
-        const day = sessionAttributes.hasOwnProperty('day') ? sessionAttributes.day : 0;
-
-        if (year && month && day) {
-            attributesManager.setSessionAttributes(sessionAttributes);
-        }
-    }
-}
-*/
-
 /////////////////////////////////
 // SkillBuilder Definition
 /////////////////////////////////
@@ -380,16 +537,14 @@ const LoadBirthdayInterceptor = {
  * defined are included below. The order matters - they're processed top to bottom.
  */
 exports.handler = Alexa.SkillBuilders.custom()
-//    .withPersistenceAdapter(
-//        new persistenceAdapter.S3PersistenceAdapter({ bucketName: process.env.S3_PERSISTENCE_BUCKET })
-//    )
+    .withPersistenceAdapter(persistenceAdapter)
     .addRequestHandlers(
         LaunchRequestHandler,
         SingleStatusIntentHandler,
+        GeneralStatusIntentHandler,
         HelpIntentHandler,
         CancelAndStopIntentHandler,
-        SessionEndedRequestHandler,
-        IntentReflectorHandler) // make sure IntentReflectorHandler is last so it doesn't override your custom intent handlers
+        SessionEndedRequestHandler)
     .addErrorHandlers(
         ErrorHandler)
     .addRequestInterceptors(

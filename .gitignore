@@ -6,3 +6,9 @@
 
 # Ignore env vars
 *.env
+
+# Ignore debugger config file
+local-debugger.js
+
+# Ignore ask directory
+.ask/

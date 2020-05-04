@@ -10,12 +10,21 @@
     },
     "manifestVersion": "1.0",
     "publishingInformation": {
-      "category": "KNOWLEDGE_AND_TRIVIA",
+      "category": "NEWS",
       "distributionCountries": [],
       "isAvailableWorldwide": true,
       "locales": {
         "es-MX": {
           "name": "Estado del Subte BA"
+        },
+        "es-US": {
+          "name": "Estado del Subte BA"
+        },
+        "es-ES": {
+          "name": "Estado del Subte BA"
+        },
+        "en-US": {
+          "name": "Buenos Aires Subway Status"
         }
       },
       "testingInstructions": "Sample Testing Instructions."
